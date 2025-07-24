@@ -1,0 +1,615 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Market-Assisted Land Reform Limitations Mind Map</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/d3/7.8.5/d3.min.js"></script>
+    <style>
+        body {
+            font-family: 'Georgia', serif;
+            margin: 0;
+            padding: 20px;
+            background: linear-gradient(135deg, #f5f5f0 0%, #e8e6e0 100%);
+            color: #333;
+        }
+        .container {
+            max-width: 1800px;
+            margin: 0 auto;
+        }
+        h1 {
+            text-align: center;
+            color: #2c3e50;
+            margin-bottom: 20px;
+            font-size: 2.2em;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.1);
+        }
+        .controls {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        .control-button {
+            background: linear-gradient(135deg, #3498db, #2980b9);
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            margin: 0 10px;
+            border-radius: 25px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+        }
+        .control-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 12px rgba(0,0,0,0.3);
+        }
+        .control-button.active {
+            background: linear-gradient(135deg, #e74c3c, #c0392b);
+        }
+        #mindmap {
+            width: 100%;
+            height: 900px; /* Increased from 800px */
+            border: 2px solid #8b4513;
+            border-radius: 15px;
+            background: linear-gradient(135deg, #faf8f2 0%, #f0f0f0 100%);
+            box-shadow: 0 8px 25px rgba(0,0,0,0.15);
+        }
+        .node {
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        .node:hover {
+            filter: brightness(1.1);
+        }
+        .node-text {
+            font-family: 'Georgia', serif;
+            font-weight: bold;
+            text-anchor: middle;
+            dominant-baseline: central;
+            pointer-events: none;
+            text-shadow: 1px 1px 2px rgba(0,0,0,0.3);
+        }
+        .link {
+            fill: none;
+            stroke-width: 2;
+            opacity: 0.6;
+            transition: all 0.3s ease;
+        }
+        .tooltip {
+            position: absolute;
+            background: rgba(0,0,0,0.9);
+            color: white;
+            padding: 15px;
+            border-radius: 10px;
+            font-size: 12px;
+            max-width: 300px;
+            line-height: 1.4;
+            pointer-events: none;
+            opacity: 0;
+            transition: opacity 0.3s;
+            box-shadow: 0 6px 20px rgba(0,0,0,0.3);
+            z-index: 1000;
+        }
+        .legend {
+            position: absolute;
+            top: 100px;
+            left: 20px;
+            background: rgba(255, 255, 255, 0.95);
+            border: 2px solid #8b4513;
+            border-radius: 15px;
+            padding: 20px;
+            box-shadow: 0 6px 20px rgba(0,0,0,0.2);
+            backdrop-filter: blur(10px);
+        }
+        .legend-item {
+            display: flex;
+            align-items: center;
+            margin-bottom: 10px;
+            font-size: 12px;
+        }
+        .legend-color {
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            margin-right: 10px;
+            border: 2px solid #333;
+        }
+        .insight-panel {
+            position: absolute;
+            bottom: 20px;
+            right: 20px;
+            width: 400px;
+            background: rgba(139, 69, 19, 0.95);
+            color: white;
+            padding: 20px;
+            border-radius: 15px;
+            font-style: italic;
+            box-shadow: 0 6px 20px rgba(0,0,0,0.2);
+            backdrop-filter: blur(10px);
+        }
+        .highlighted {
+            stroke: #ff6b35 !important;
+            stroke-width: 4px !important;
+            opacity: 1 !important;
+        }
+        .dimmed {
+            opacity: 0.2 !important;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Market-Assisted Land Reform Limitations Mind Map</h1>
+        
+        <div class="controls">
+            <button class="control-button" onclick="showAllConnections()">Show All</button>
+            <button class="control-button" onclick="highlightScaleMismatch()">Scale Mismatch</button>
+            <button class="control-button" onclick="highlightCommodification()">Commodification Trap</button>
+            <button class="control-button" onclick="highlightTrendLimitations()">Food Regime Trends</button>
+            <button class="control-button" onclick="resetView()">Reset View</button>
+        </div>
+
+        <svg id="mindmap"></svg>
+
+        <!-- Legend -->
+        <div class="legend">
+            <h3 style="margin-top: 0; color: #2c3e50;">Node Types</h3>
+            <div class="legend-item">
+                <div class="legend-color" style="background: linear-gradient(135deg, #e74c3c, #c0392b);"></div>
+                <span>Scale Mismatch</span>
+            </div>
+            <div class="legend-item">
+                <div class="legend-color" style="background: linear-gradient(135deg, #f39c12, #e67e22);"></div>
+                <span>Commodification</span>
+            </div>
+            <div class="legend-item">
+                <div class="legend-color" style="background: linear-gradient(135deg, #2c3e50, #34495e);"></div>
+                <span>Neoliberal Trend</span>
+            </div>
+            <div class="legend-item">
+                <div class="legend-color" style="background: linear-gradient(135deg, #3498db, #2980b9);"></div>
+                <span>Reformist Trend</span>
+            </div>
+            <div class="legend-item">
+                <div class="legend-color" style="background: linear-gradient(135deg, #27ae60, #229954);"></div>
+                <span>Progressive Trend</span>
+            </div>
+            <div class="legend-item">
+                <div class="legend-color" style="background: linear-gradient(135deg, #8e44ad, #9b59b6);"></div>
+                <span>Radical Trend</span>
+            </div>
+            <div class="legend-item">
+                <div class="legend-color" style="background: linear-gradient(135deg, #95a5a6, #bdc3c7);"></div>
+                <span>Structural Barriers</span>
+            </div>
+        </div>
+
+        <!-- Insight Panel -->
+        <div class="insight-panel">
+            <strong>Key Insight:</strong> Market-assisted land reform operates at a scale fundamentally inadequate to trillion-dollar land markets. All U.S. foundation giving ($90B annually) versus California property value increases alone ($400B+ annually) reveals the mathematical impossibility. Each food regime trend faces distinct but related structural limitations when confronted with commodified land systems.
+        </div>
+
+        <div class="tooltip" id="tooltip"></div>
+    </div>
+
+    <script>
+        // Data structure for the mind map
+        const data = {
+            name: "Market-Assisted Land Reform Limitations",
+            type: "root",
+            children: [
+                {
+                    name: "Scale Mismatch Problem",
+                    type: "scale",
+                    children: [
+                        {
+                            name: "Trillion-Dollar Reality",
+                            type: "scale",
+                            description: "California alone: $8.7 trillion in assessed property value. U.S. total land value: $23+ trillion. U.S. farmland value: $3.52 trillion in 2024. These numbers dwarf any market-assisted intervention."
+                        },
+                        {
+                            name: "Microscopic Interventions",
+                            type: "scale",
+                            description: "Largest Land Back success: 28,000 acres to Bois Forte Band. Largest land tax payment: $20 million to Sogorea Te'. Total land trust protection: 61 million acres over decades. California's average home price ($786,400) represents more wealth than most entire Land Back projects."
+                        },
+                        {
+                            name: "Mathematical Impossibility",
+                            type: "scale",
+                            description: "Even if every land trust in America (1,300+) successfully implemented all 9 tools simultaneously, they would barely make a dent in markets where speculation drives trillion-dollar valuations."
+                        }
+                    ]
+                },
+                {
+                    name: "Commodification Trap",
+                    type: "commodification",
+                    children: [
+                        {
+                            name: "Land as Speculation",
+                            type: "commodification",
+                            description: "California farmland rising 6%+ annually. National farmland: $4,170/acre average, 40% increase over decade. Land treated as investment vehicle rather than use resource, making any 'affordable' intervention swim against tide of financialization."
+                        },
+                        {
+                            name: "Market-Rate Dependencies",
+                            type: "commodification",
+                            description: "Buy-Protect-Sell still requires market-rate purchase. Agricultural Easements reduce land value but don't eliminate land as commodity. Community Land Trusts create affordability islands in oceans of speculation."
+                        },
+                        {
+                            name: "Fundamental Acceptance",
+                            type: "commodification",
+                            description: "All 9 tools fundamentally accept and work within existing market structures rather than challenging them. When land itself is a commodity, any 'affordable' intervention operates within a fundamentally unaffordable system."
+                        }
+                    ]
+                },
+                {
+                    name: "Neoliberal Trend Limitations",
+                    type: "neoliberal",
+                    children: [
+                        {
+                            name: "Market Fundamentalism Exposed",
+                            type: "neoliberal",
+                            description: "Neoliberal faith in 'land mobility' and 'entrepreneurial farming' collapses when median home prices ($786,400) exceed total budgets of most land justice projects. Market efficiency claims fail when speculation drives land values faster than any productive use."
+                        },
+                        {
+                            name: "Corporate Agriculture Scaling",
+                            type: "neoliberal",
+                            description: "Gates Foundation's massive agricultural investments operate in same structural contradiction - trying to solve problems created by commodification through more sophisticated market mechanisms. Foundation giving ($90B annually) dwarfed by California property increases ($400B+)."
+                        },
+                        {
+                            name: "Technological Solutionism",
+                            type: "neoliberal",
+                            description: "GMO and precision agriculture promoted as solutions while ignoring that California farmland rising 6%+ annually prices out farmers regardless of technology. Tools can't address speculation-driven land costs."
+                        }
+                    ]
+                },
+                {
+                    name: "Reformist Trend Limitations",
+                    type: "reformist",
+                    children: [
+                        {
+                            name: "Philanthropic Ceiling Hit",
+                            type: "reformist",
+                            description: "All U.S. foundation giving ($90B annually) vs California property tax revenue alone ($97.9B annually). Reformist 'safety nets' and 'sustainable certification' hit insurmountable mathematical ceiling when operating in trillion-dollar markets."
+                        },
+                        {
+                            name: "Market-Led Land Reform Failure",
+                            type: "reformist",
+                            description: "Vermont Land Trust's OPAV success doesn't translate to California's $786,400 median home prices. Agricultural easements and voluntary mechanisms create what analysis calls 'affordability islands in oceans of speculation' - structurally inadequate."
+                        },
+                        {
+                            name: "Corporate Responsibility Illusion",
+                            type: "reformist",
+                            description: "Voluntary corporate responsibility mechanisms face same limitation as voluntary land tax payments - don't address underlying ownership patterns. Los Angeles land values (61% of home price) make community land trusts financially impossible without massive subsidy."
+                        }
+                    ]
+                },
+                {
+                    name: "Progressive Trend Limitations",
+                    type: "progressive",
+                    children: [
+                        {
+                            name: "Coordination Crisis",
+                            type: "progressive",
+                            description: "1,300+ land trusts competing for same philanthropic dollars with no coordinated strategy. Geographic isolation: Vermont success stories remain locally bounded, unable to scale to California Central Valley land prices that far exceed conservation budgets."
+                        },
+                        {
+                            name: "Co-optation Vulnerability",
+                            type: "progressive",
+                            description: "Community land trusts and local food systems, while valuable, remain structurally limited because they operate within system where land appreciation outpaces any community-based intervention. Progressive innovations isolated from structural power."
+                        },
+                        {
+                            name: "Resource Competition Trap",
+                            type: "progressive",
+                            description: "Each organization reinventing wheels rather than building collective success. Knowledge fragmentation: best practices trapped in individual organizations, no standardized approaches across regions facing vastly different land value contexts."
+                        }
+                    ]
+                },
+                {
+                    name: "Radical Trend Validation",
+                    type: "radical",
+                    children: [
+                        {
+                            name: "Structural Analysis Confirmed",
+                            type: "radical",
+                            description: "Via Campesina's demands for 'dismantling corporate agri-food monopolies' and 'redistributive land reform' validated by mathematical proof: even perfect implementation of all market-assisted tools would barely make dent in trillion-dollar markets."
+                        },
+                        {
+                            name: "Scale-Matched Solutions Required",
+                            type: "radical",
+                            description: "Democratic control and community rights to land address same scale mismatch that makes California's average home price ($786,400) represent more wealth than most entire Land Back projects. Only decommodification operates at required scale."
+                        },
+                        {
+                            name: "Political Power Prerequisites",
+                            type: "radical",
+                            description: "Land as public trust rather than private commodity, constitutional amendments establishing land as human right, public banking - interventions that require state power mobilized for decommodification rather than market assistance."
+                        }
+                    ]
+                },
+                {
+                    name: "Structural Barriers",
+                    type: "barriers",
+                    children: [
+                        {
+                            name: "Missing Federal Infrastructure",
+                            type: "barriers",
+                            description: "No USDA equivalent for land justice. No interstate compacts or regional coordination authorities. No national revolving loan fund. 50 different state legal frameworks prevent coordinated response to trillion-dollar markets."
+                        },
+                        {
+                            name: "Power Relations Ignored",
+                            type: "barriers",
+                            description: "Toolkit treats land justice as technical problem requiring better tools rather than political problem requiring organized power. Real estate investment trusts managing billions, wealthy landowners seeing massive appreciation benefit from current system."
+                        },
+                        {
+                            name: "Class Contradictions Unaddressed",
+                            type: "barriers",
+                            description: "Middle-class participants in alternative food networks remain embedded in broader system of land commodification while working-class and peasant communities cannot access market-based solutions to land access at any scale."
+                        }
+                    ]
+                }
+            ]
+        };
+
+        // Set up the SVG with increased height
+        const width = 1760;
+        const height = 900; // Increased from 800
+        const svg = d3.select("#mindmap")
+            .attr("width", width)
+            .attr("height", height);
+
+        // Create a group for zooming and panning
+        const g = svg.append("g");
+
+        // Add zoom behavior
+        const zoom = d3.zoom()
+            .scaleExtent([0.5, 3])
+            .on("zoom", (event) => {
+                g.attr("transform", event.transform);
+            });
+
+        svg.call(zoom);
+
+        // Color schemes for different node types
+        const colors = {
+            root: "#8e44ad",
+            scale: "#e74c3c",
+            commodification: "#f39c12",
+            neoliberal: "#2c3e50",
+            reformist: "#3498db",
+            progressive: "#27ae60",
+            radical: "#8e44ad",
+            barriers: "#95a5a6"
+        };
+
+        // Create hierarchical layout
+        const root = d3.hierarchy(data);
+        const treeLayout = d3.tree().size([width - 200, height - 200]);
+        treeLayout(root);
+
+        // Adjust positions for better radial layout with much more spacing
+        const angleStep = (2 * Math.PI) / root.children.length;
+        root.children.forEach((child, i) => {
+            const angle = i * angleStep;
+            const radius = 400; // Increased from 300
+            child.x = width / 2 + radius * Math.cos(angle);
+            child.y = height / 2 + radius * Math.sin(angle);
+            
+            // Position grandchildren in clusters around their parents
+            if (child.children) {
+                const childAngleStep = Math.PI / (child.children.length + 1);
+                child.children.forEach((grandchild, j) => {
+                    const childAngle = angle + (j - child.children.length/2) * childAngleStep * 0.8; // Increased spread
+                    const childRadius = 280; // Increased from 200
+                    grandchild.x = child.x + childRadius * Math.cos(childAngle);
+                    grandchild.y = child.y + childRadius * Math.sin(childAngle);
+                });
+            }
+        });
+
+        // Position root at center
+        root.x = width / 2;
+        root.y = height / 2;
+
+        // Create tooltip
+        const tooltip = d3.select("#tooltip");
+
+        // Draw links
+        const links = g.selectAll(".link")
+            .data(root.links())
+            .enter().append("path")
+            .attr("class", "link")
+            .attr("d", d => {
+                return `M${d.source.x},${d.source.y}L${d.target.x},${d.target.y}`;
+            })
+            .style("stroke", d => {
+                if (d.target.data.type === "scale") return "#e74c3c";
+                if (d.target.data.type === "commodification") return "#f39c12";
+                if (d.target.data.type === "neoliberal") return "#2c3e50";
+                if (d.target.data.type === "reformist") return "#3498db";
+                if (d.target.data.type === "progressive") return "#27ae60";
+                if (d.target.data.type === "radical") return "#8e44ad";
+                return "#7f8c8d";
+            });
+
+        // Draw nodes
+        const nodes = g.selectAll(".node")
+            .data(root.descendants())
+            .enter().append("g")
+            .attr("class", "node")
+            .attr("transform", d => `translate(${d.x},${d.y})`);
+
+        // Add circles for nodes with much larger sizes
+        nodes.append("circle")
+            .attr("r", d => {
+                if (d.depth === 0) return 80; // Root - increased from 50
+                if (d.depth === 1) return 60; // Main categories - increased from 35
+                return 45; // Leaf nodes - increased from 25
+            })
+            .style("fill", d => {
+                const baseColor = colors[d.data.type] || "#7f8c8d";
+                return d.depth === 0 ? baseColor : 
+                       d.depth === 1 ? baseColor : 
+                       d3.color(baseColor).brighter(0.3);
+            })
+            .style("stroke", "#fff")
+            .style("stroke-width", "3px")
+            .style("filter", "drop-shadow(2px 2px 4px rgba(0,0,0,0.3))");
+
+        // Add text labels with better sizing and wrapping
+        nodes.append("text")
+            .attr("class", "node-text")
+            .attr("dy", "0.35em")
+            .style("font-size", d => {
+                if (d.depth === 0) return "14px";
+                if (d.depth === 1) return "12px";
+                return "10px";
+            })
+            .style("fill", "white")
+            .each(function(d) {
+                const text = d.data.name;
+                const maxLength = d.depth === 0 ? 25 : d.depth === 1 ? 20 : 15;
+                
+                if (text.length <= maxLength) {
+                    d3.select(this).text(text);
+                } else {
+                    // Split text into multiple lines
+                    const words = text.split(' ');
+                    let lines = [];
+                    let currentLine = '';
+                    
+                    words.forEach(word => {
+                        if ((currentLine + word).length <= maxLength) {
+                            currentLine += (currentLine ? ' ' : '') + word;
+                        } else {
+                            if (currentLine) lines.push(currentLine);
+                            currentLine = word;
+                        }
+                    });
+                    if (currentLine) lines.push(currentLine);
+                    
+                    // Limit to 3 lines max
+                    if (lines.length > 3) {
+                        lines = lines.slice(0, 2);
+                        lines.push('...');
+                    }
+                    
+                    const lineHeight = d.depth === 0 ? 16 : d.depth === 1 ? 14 : 12;
+                    const startY = -(lines.length - 1) * lineHeight / 2;
+                    
+                    lines.forEach((line, i) => {
+                        d3.select(this).append('tspan')
+                            .attr('x', 0)
+                            .attr('dy', i === 0 ? startY : lineHeight)
+                            .text(line);
+                    });
+                }
+            });
+
+        // Add interactivity
+        nodes
+            .on("mouseover", function(event, d) {
+                if (d.data.description) {
+                    tooltip
+                        .style("opacity", 1)
+                        .html(`<strong>${d.data.name}</strong><br><br>${d.data.description}`)
+                        .style("left", (event.pageX + 10) + "px")
+                        .style("top", (event.pageY - 10) + "px");
+                }
+                
+                // Highlight connected elements
+                d3.select(this).select("circle")
+                    .style("stroke", "#ff6b35")
+                    .style("stroke-width", "5px");
+            })
+            .on("mouseout", function(event, d) {
+                tooltip.style("opacity", 0);
+                
+                d3.select(this).select("circle")
+                    .style("stroke", "#fff")
+                    .style("stroke-width", "3px");
+            })
+            .on("click", function(event, d) {
+                // Zoom to clicked node
+                const scale = 2;
+                const translate = [width/2 - scale*d.x, height/2 - scale*d.y];
+                
+                svg.transition().duration(750).call(
+                    zoom.transform,
+                    d3.zoomIdentity.translate(translate[0], translate[1]).scale(scale)
+                );
+            });
+
+        // Control functions
+        window.showAllConnections = function() {
+            links.classed("highlighted", false).classed("dimmed", false);
+            nodes.classed("dimmed", false);
+            document.querySelectorAll('.control-button').forEach(btn => btn.classList.remove('active'));
+            event.target.classList.add('active');
+        };
+
+        window.highlightScaleMismatch = function() {
+            const scaleNodes = root.descendants().filter(d => 
+                d.data.type === "scale" || 
+                d.data.name.includes("Trillion") || d.data.name.includes("Mathematical") ||
+                d.data.name.includes("Microscopic")
+            );
+            
+            nodes.classed("dimmed", d => !scaleNodes.includes(d));
+            links.classed("dimmed", d => !scaleNodes.includes(d.source) && !scaleNodes.includes(d.target))
+                 .classed("highlighted", d => scaleNodes.includes(d.source) || scaleNodes.includes(d.target));
+            
+            document.querySelectorAll('.control-button').forEach(btn => btn.classList.remove('active'));
+            event.target.classList.add('active');
+        };
+
+        window.highlightCommodification = function() {
+            const commodNodes = root.descendants().filter(d => 
+                d.data.type === "commodification" || 
+                d.data.name.includes("Speculation") || d.data.name.includes("Market-Rate") ||
+                d.data.name.includes("Fundamental")
+            );
+            
+            nodes.classed("dimmed", d => !commodNodes.includes(d));
+            links.classed("dimmed", d => !commodNodes.includes(d.source) && !commodNodes.includes(d.target))
+                 .classed("highlighted", d => commodNodes.includes(d.source) || commodNodes.includes(d.target));
+            
+            document.querySelectorAll('.control-button').forEach(btn => btn.classList.remove('active'));
+            event.target.classList.add('active');
+        };
+
+        window.highlightTrendLimitations = function() {
+            const trendNodes = root.descendants().filter(d => 
+                d.data.type === "neoliberal" || d.data.type === "reformist" || 
+                d.data.type === "progressive" || d.data.type === "radical"
+            );
+            
+            nodes.classed("dimmed", d => !trendNodes.includes(d));
+            links.classed("dimmed", d => !trendNodes.includes(d.source) && !trendNodes.includes(d.target))
+                 .classed("highlighted", d => trendNodes.includes(d.source) || trendNodes.includes(d.target));
+            
+            document.querySelectorAll('.control-button').forEach(btn => btn.classList.remove('active'));
+            event.target.classList.add('active');
+        };
+
+        window.resetView = function() {
+            svg.transition().duration(750).call(
+                zoom.transform,
+                d3.zoomIdentity
+            );
+            showAllConnections();
+        };
+
+        // Initial animation
+        nodes.style("opacity", 0)
+             .transition()
+             .duration(1000)
+             .delay((d, i) => i * 50)
+             .style("opacity", 1);
+
+        links.style("opacity", 0)
+             .transition()
+             .duration(1000)
+             .delay(500)
+             .style("opacity", 0.6);
+    </script>
+</body>
+</html>
